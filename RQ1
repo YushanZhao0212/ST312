@@ -1,0 +1,37 @@
+library(readxl)
+library(plm)
+data<-read_csv("dataset_for_FEmodel.csv")
+data[data == "NA"] <- NA
+colSums(is.na(data))
+#clean dta
+df<- na.omit(data)
+
+
+library(ggplot2)
+ggplot(df, aes(x = Year, y = food_CPI, color = Country)) +
+  geom_line() +
+  #labs(title = "CPI trends by Country over Time")+
+  theme_minimal()
+
+ggplot(df, aes(x = Country, y = food_CPI)) +
+  geom_boxplot() +
+  #labs(title = "Distribution of CPI by Country") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+library(GGally)
+ggpairs(
+  df[, c("food_CPI", "GDP", "temp", "gov", "FertilizerValue", "production_indices", "FDI", "ER")],
+  lower = list(continuous = wrap("points", size = 0.8, alpha = 0.6, color = "steelblue"))
+)
+
+cor(df[, c("food_CPI", "GDP", "temp", "gov", "FertilizerValue", 
+           "production_indices", "FDI", "ER")], use = "complete.obs")
+vars <- df[, c("food_CPI", "GDP", "temp", "gov", "FertilizerValue", 
+               "production_indices", "FDI", "ER")]
+library(psych)
+corr_result <- corr.test(vars, use = "pairwise", method = "pearson")
+
+cor_matrix <- corr_result$r
+p_matrix <- corr_result$p
