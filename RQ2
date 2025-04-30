@@ -1,0 +1,62 @@
+library(readxl)
+library(plm)
+data<-read_csv("dataset_for_FEmodel.csv")
+data[data == "NA"] <- NA
+colSums(is.na(data))
+#clean dta
+df<- na.omit(data)
+
+#variable transformation
+df$Country <- as.factor(df$Country)
+df$Year <- as.integer(df$Year)
+df$GDP <- as.numeric(as.character(df$GDP))
+df$gov <- as.numeric(as.character(df$gov))
+df$FertilizerValue <- as.numeric(as.character(df$FertilizerValue))
+df$production_indices <- as.numeric(as.character(df$production_indices))
+df$FDI <- as.numeric(as.character(df$FDI))
+df$ER <- as.numeric(as.character(df$ER))
+
+pdata <- pdata.frame(df, index = c("Country", "Year"))
+
+#process variable and use oneway fixed effect model
+
+df$log_GDP <- log(df$GDP)
+df$log_Fertilizer <- log(df$FertilizerValue)
+
+
+pdata <- pdata.frame(df, index = c("Country", "Year"))
+model <- plm(food_CPI ~ log_GDP + temp +  gov + log_Fertilizer+ production_indices + FDI+ER , 
+             data = pdata,  model = "within", effect = "individual")
+summary(model)
+
+
+#Driscoll–Kraay correction
+# Maintain country fixed effects and adjusts standard errors for cross-sectional dependence
+library(lmtest)
+scc_se <- vcovSCC(model, type="HC0", maxlag=5)
+coeftest(model, vcov = scc_se)
+
+#model diagnosis
+library(ggplot2)
+
+diag_df <- data.frame(
+  Fitted = model$model$food_CPI - residuals(model),
+  Residual = residuals(model)
+)
+
+#Residuals vs Fitted
+ggplot(diag_df, aes(x = Fitted, y = Residual)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Residuals vs Fitted", x = "Fitted values", y = "Residuals")
+
+#residual histogram
+ggplot(diag_df, aes(x = Residual)) +
+  geom_histogram(bins = 30) +
+  labs(title = "Histogram of Residuals", x = "Residuals")
+
+#Q–Q plot
+ggplot(diag_df, aes(sample = Residual)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Normal Q–Q Plot of Residuals")
