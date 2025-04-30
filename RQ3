@@ -1,0 +1,564 @@
+library(readxl)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(forecast)
+library(tseries)
+
+
+############### Australia ###############
+#Read data
+cpi_data_Australia <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Australia") %>%
+  select(Value, time)
+
+cpi_data_Australia <- cpi_data_Australia %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_Australia <- ts(cpi_data_Australia$Value, start = c(year(min(cpi_data_Australia$time)), month(min(cpi_data_Australia$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_Australia, main = "Australia Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+
+fit_ets <- ets(cpi_ts_Australia)
+summary(fit_ets)
+
+
+#Fit ARIMA model (automatically finds the best combination)
+
+d_Australia <- ndiffs(cpi_ts_Australia)    
+D_Australia <- nsdiffs(cpi_ts_Australia)   
+
+
+lambda_Australia <- BoxCox.lambda(cpi_ts_Australia)
+
+
+model_Australia <- auto.arima(
+  cpi_ts_Australia,
+  d             = d_Australia,
+  D             = D_Australia,
+  seasonal      = TRUE,
+  lambda        = lambda_Australia,
+  biasadj       = TRUE,   
+  stepwise      = FALSE,   
+  approximation = FALSE    
+)
+
+#Check model
+summary(model_Australia)
+checkresiduals(model_Australia)
+
+#Prediction for the following 12 months
+forecast_cpi_Australia <- forecast(model_Australia, h = 12)
+plot(forecast_cpi_Australia, main = "Forecasted Australia CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_Australia
+
+predicted_Australia <- data.frame(Date = seq(from = max(cpi_data_Australia$time) + months(1), by = "month", length.out = 12),
+                                  Forecast = as.numeric(forecast_cpi_Australia$mean))
+
+############### Brazil ###############
+#Read data
+cpi_data_Brazil <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Brazil") %>%
+  select(Value, time)
+
+cpi_data_Brazil <- cpi_data_Brazil %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Brazil <- ts(cpi_data_Brazil$Value, start = c(year(min(cpi_data_Brazil$time)), month(min(cpi_data_Brazil$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_Brazil, main = "Brazil Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+#Fit ARIMA model (automatically finds the best combination)
+
+model_Brazil <- auto.arima(
+  cpi_ts_Brazil,
+  seasonal      = TRUE,
+    )
+
+# Check model
+summary(model_Brazil)
+checkresiduals(model_Brazil)
+
+
+resid_Brazil <- residuals(model_Brazil)
+#Change lag value
+lag_val <- 6
+lb_result <- Box.test(resid_Brazil, lag = lag_val, type = "Ljung-Box", fitdf = length(model_Brazil$coef))
+print(lb_result)
+#Prediction for the following 12 months
+forecast_cpi_Brazil <- forecast(model_Brazil, h = 12)
+plot(forecast_cpi_Brazil, main = "Forecasted Brazil CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_Brazil
+
+predicted_Brazil <- data.frame(Date = seq(from = max(cpi_data_Brazil$time) + months(1), by = "month", length.out = 12),
+                               Forecast = as.numeric(forecast_cpi_Brazil$mean))
+
+
+
+
+
+
+
+############### Canada ###############
+#Read data
+cpi_data_Canada <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Canada") %>%
+  select(Value, time)
+
+cpi_data_Canada <- cpi_data_Canada %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Canada <- ts(cpi_data_Canada$Value, start = c(year(min(cpi_data_Canada$time)), month(min(cpi_data_Canada$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_Canada, main = "Canada Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+#Fit ARIMA model (automatically finds the best combination)
+
+d_Canada <- ndiffs(cpi_ts_Canada)    
+D_Canada <- nsdiffs(cpi_ts_Canada)   
+
+
+lambda_Canada <- BoxCox.lambda(cpi_ts_Canada)
+
+
+model_Canada <- auto.arima(
+  cpi_ts_Canada,
+  d             = d_Canada,
+  D             = D_Canada,
+  seasonal      = TRUE,
+  lambda        = lambda_Canada,
+  biasadj       = TRUE,   
+  stepwise      = FALSE,   
+  approximation = FALSE    
+)
+
+# Check model
+summary(model_Canada)
+checkresiduals(model_Canada)
+
+#Prediction for the following 12 months
+forecast_cpi_Canada <- forecast(model_Canada, h = 12)
+plot(forecast_cpi_Canada, main = "Forecasted Canada CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_Canada
+
+predicted_Canada <- data.frame(Date = seq(from = max(cpi_data_Canada$time) + months(1), by = "month", length.out = 12),
+                               Forecast = as.numeric(forecast_cpi_Canada$mean))
+
+############### Indonesia ###############
+cpi_data_Indonesia <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Indonesia") %>%
+  select(Value, time)
+
+cpi_data_Indonesia <- cpi_data_Indonesia %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Indonesia <- ts(cpi_data_Indonesia$Value, 
+                       start = c(year(min(cpi_data_Indonesia$time)), month(min(cpi_data_Indonesia$time))),
+                       frequency = 12)
+
+plot(cpi_ts_Indonesia, main = "Indonesia Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+d_Indonesia <- ndiffs(cpi_ts_Indonesia)    
+D_Indonesia <- nsdiffs(cpi_ts_Indonesia)   
+
+lambda_Indonesia <- BoxCox.lambda(cpi_ts_Indonesia)
+
+model_Indonesia <- auto.arima(
+  cpi_ts_Indonesia,
+  d             = d_Indonesia,
+  D             = D_Indonesia,
+  seasonal      = TRUE,
+  lambda        = lambda_Indonesia,
+  biasadj       = TRUE,   
+  stepwise      = FALSE,   
+  approximation = FALSE    
+)
+
+# Check model
+summary(model_Indonesia)
+resid_Indonesia <- residuals(model_Indonesia)
+lag_val <- 34
+lb_result <- Box.test(resid_Indonesia, lag = lag_val, type = "Ljung-Box", fitdf = length(model_Indonesia$coef))
+print(lb_result)
+
+# Prediction for the following 12 months
+forecast_cpi_Indonesia <- forecast(model_Indonesia, h = 12)
+plot(forecast_cpi_Indonesia, main = "Forecasted Indonesia CPI (Food Index)")
+
+# Check predicted values
+forecast_cpi_Indonesia
+
+predicted_Indonesia <- data.frame(Date = seq(from = max(cpi_data_Indonesia$time) + months(1), by = "month", length.out = 12),
+                                  Forecast = as.numeric(forecast_cpi_Indonesia$mean))
+
+
+
+############### Colombia ###############
+#Read data
+cpi_data_Colombia <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Colombia") %>%
+  select(Value, time)
+
+cpi_data_Colombia <- cpi_data_Colombia %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Colombia <- ts(cpi_data_Colombia$Value, start = c(year(min(cpi_data_Colombia$time)), month(min(cpi_data_Colombia$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_Colombia, main = "Colombia Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+#Fit ARIMA model (automatically finds the best combination)
+model_Colombia <- auto.arima(cpi_ts_Colombia,seasonal= TRUE)
+summary(model_Colombia)
+checkresiduals(model_Colombia)
+
+#Prediction for the following 12 months
+forecast_cpi_Colombia <- forecast(model_Colombia, h = 12)
+plot(forecast_cpi_Colombia, main = "Forecasted Colombia CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_Colombia
+
+predicted_Colombia <- data.frame(Date = seq(from = max(cpi_data_Colombia$time) + months(1), by = "month", length.out = 12),
+                                 Forecast = as.numeric(forecast_cpi_Colombia$mean))
+
+
+############### Egypt ###############
+#Read data
+cpi_data_Egypt <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Egypt") %>%
+  select(Value, time)
+
+cpi_data_Egypt <- cpi_data_Egypt %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Egypt <- ts(cpi_data_Egypt$Value, start = c(year(min(cpi_data_Egypt$time)), month(min(cpi_data_Egypt$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_Egypt, main = "Egypt Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+#Fit ARIMA model (automatically finds the best combination)
+model_Egypt <- auto.arima(cpi_ts_Egypt,seasonal = TRUE)
+summary(model_Egypt)
+checkresiduals(model_Egypt)
+
+#Prediction for the following 12 months
+forecast_cpi_Egypt <- forecast(model_Egypt, h = 12)
+plot(forecast_cpi_Egypt, main = "Forecasted Egypt CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_Egypt
+
+predicted_Egypt <- data.frame(Date = seq(from = max(cpi_data_Egypt$time) + months(1), by = "month", length.out = 12),
+                              Forecast = as.numeric(forecast_cpi_Egypt$mean))
+
+############### France ###############
+#Read data
+cpi_data_France <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_France") %>%
+  select(Value, time)
+
+cpi_data_France <- cpi_data_France %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_France <- ts(cpi_data_France$Value, start = c(year(min(cpi_data_France$time)), month(min(cpi_data_France$time))), frequency = 12)
+
+#Visualization
+plot(cpi_ts_France, main = "France Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+#Fit ARIMA model (automatically finds the best combination)
+model_France <- auto.arima(cpi_ts_France,seasonal = TRUE)
+summary(model_France)
+checkresiduals(model_France)
+
+#Prediction for the following 12 months
+forecast_cpi_France <- forecast(model_France, h = 12)
+plot(forecast_cpi_France, main = "Forecasted France CPI (Food Index)")
+
+#Check predicted values
+forecast_cpi_France
+
+predicted_France <- data.frame(Date = seq(from = max(cpi_data_France$time) + months(1), by = "month", length.out = 12),
+                              Forecast = as.numeric(forecast_cpi_France$mean))
+
+############### India ###############
+cpi_data_india <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_India") %>%
+  select(Value, time)
+
+cpi_data_india <- cpi_data_india %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_india <- ts(cpi_data_india$Value, 
+                   start = c(year(min(cpi_data_india$time)), month(min(cpi_data_india$time))), 
+                   frequency = 12)
+
+
+plot(cpi_ts_india, main = "India Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+
+model_india <- auto.arima(cpi_ts_india, seasonal = TRUE)
+summary(model_india)
+
+
+checkresiduals(model_india)
+
+
+forecast_cpi_india <- forecast(model_india, h = 12)
+plot(forecast_cpi_india, main = "Forecasted India CPI (Food Index)")
+
+forecast_cpi_india
+
+predicted_india <- data.frame(Date = seq(from = max(cpi_data_india$time) + months(1), 
+                                         by = "month", 
+                                         length.out = 12),
+                              Forecast = as.numeric(forecast_cpi_india$mean))
+############### New_Zealand ###############
+cpi_data_New_Zealand <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_New_Zealand") %>%
+  select(Value, time)
+
+
+cpi_data_New_Zealand <- cpi_data_New_Zealand %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_New_Zealand <- ts(cpi_data_New_Zealand$Value, 
+                         start = c(year(min(cpi_data_New_Zealand$time)), month(min(cpi_data_New_Zealand$time))),
+                         frequency = 12)
+
+
+plot(cpi_ts_New_Zealand, main = "New_Zealand Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+
+model_New_Zealand <- auto.arima(cpi_ts_New_Zealand,seasonal = TRUE)
+summary(model_New_Zealand)
+
+
+checkresiduals(model_New_Zealand)
+
+
+forecast_cpi_New_Zealand <- forecast(model_New_Zealand, h = 12)
+plot(forecast_cpi_New_Zealand, main = "Forecasted New_Zealand CPI (Food Index)")
+forecast_cpi_New_Zealand
+
+
+predicted_New_Zealand <- data.frame(Date = seq(from = max(cpi_data_New_Zealand$time) + months(1), 
+                                               by = "month", 
+                                               length.out = 12),
+                                    Forecast = as.numeric(forecast_cpi_New_Zealand$mean))
+############### Nigeria ###############
+cpi_data_Nigeria <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Nigeria") %>%
+  select(Value, time)
+
+
+cpi_data_Nigeria <- cpi_data_Nigeria %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_Nigeria <- ts(cpi_data_Nigeria$Value, 
+                     start = c(year(min(cpi_data_Nigeria$time)), month(min(cpi_data_Nigeria$time))),
+                     frequency = 12)
+
+
+plot(cpi_ts_Nigeria, main = "Nigeria Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+
+model_Nigeria <- auto.arima(cpi_ts_Nigeria, seasonal = TRUE)
+summary(model_Nigeria)
+
+
+checkresiduals(model_Nigeria)
+
+
+forecast_cpi_Nigeria <- forecast(model_Nigeria, h = 12)
+plot(forecast_cpi_Nigeria, main = "Forecasted Nigeria CPI (Food Index)")
+forecast_cpi_Nigeria
+
+
+predicted_Nigeria <- data.frame(Date = seq(from = max(cpi_data_Nigeria$time) + months(1), 
+                                           by = "month", 
+                                           length.out = 12),
+                                Forecast = as.numeric(forecast_cpi_Nigeria$mean))
+
+############### Germany###############
+cpi_data_Germany <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_Germany") %>%
+  select(Value, time)
+
+cpi_data_Germany <- cpi_data_Germany %>%
+  mutate(time = ymd(as.character(time)))
+
+cpi_ts_Germany <- ts(cpi_data_Germany$Value, 
+                     start = c(year(min(cpi_data_Germany$time)), month(min(cpi_data_Germany$time))),
+                     frequency = 12)
+
+plot(cpi_ts_Germany, main = "Germany Monthly CPI (Food Index)", ylab = "CPI", xlab = "Year")
+
+d_Germany <- ndiffs(cpi_ts_Germany)    
+D_Germany <- nsdiffs(cpi_ts_Germany)   
+
+lambda_Germany <- BoxCox.lambda(cpi_ts_Germany)
+
+model_Germany <- auto.arima(
+  cpi_ts_Germany,
+  d             = d_Germany,
+  D             = D_Germany,
+  seasonal      = TRUE,
+  lambda        = lambda_Germany,
+  biasadj       = TRUE,   
+  stepwise      = FALSE,   
+  approximation = FALSE    
+)
+
+# Check model
+summary(model_Germany)
+checkresiduals(model_Germany)
+
+# Prediction for the following 12 months
+forecast_cpi_Germany <- forecast(model_Germany, h = 12)
+plot(forecast_cpi_Germany, main = "Forecasted Germany CPI (Food Index)")
+
+# Check predicted values
+forecast_cpi_Germany
+
+predicted_Germany <- data.frame(Date = seq(from = max(cpi_data_Germany$time) + months(1), by = "month", length.out = 12),
+                                Forecast = as.numeric(forecast_cpi_Germany$mean))
+############### South_Africa ###############
+cpi_data_South_Africa <- read_excel("dataset_for_prediction.xlsx", 
+                                    sheet = "data_area_South_Africa") %>%
+  select(Value, time)
+
+
+cpi_data_South_Africa <- cpi_data_South_Africa %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_South_Africa <- ts(cpi_data_South_Africa$Value, 
+                          start = c(year(min(cpi_data_South_Africa$time)), 
+                                    month(min(cpi_data_South_Africa$time))), 
+                          frequency = 12)
+
+
+plot(cpi_ts_South_Africa, 
+     main = "South Africa Monthly CPI (Food Index)", 
+     ylab = "CPI", 
+     xlab = "Year")
+
+
+model_South_Africa <- auto.arima(cpi_ts_South_Africa, seasonal = TRUE)
+summary(model_South_Africa)
+
+
+checkresiduals(model_South_Africa)
+
+
+forecast_cpi_South_Africa <- forecast(model_South_Africa, h = 12)
+plot(forecast_cpi_South_Africa, main = "Forecasted South Africa CPI (Food Index)")
+
+
+forecast_cpi_South_Africa
+
+
+predicted_South_Africa <- data.frame(
+  Date = seq(from = max(cpi_data_South_Africa$time) + months(1), 
+             by = "month", 
+             length.out = 12),
+  Forecast = as.numeric(forecast_cpi_South_Africa$mean)
+)
+
+############### UK ###############
+cpi_data_UK <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_United_Kingdom_of_Gre") %>%
+  select(Value, time)
+
+
+cpi_data_UK <- cpi_data_UK %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_UK <- ts(cpi_data_UK$Value, 
+                start = c(year(min(cpi_data_UK$time)), 
+                          month(min(cpi_data_UK$time))), 
+                frequency = 12)
+
+
+plot(cpi_ts_UK, 
+     main = "UK Monthly CPI (Food Index)", 
+     ylab = "CPI", 
+     xlab = "Year")
+
+
+model_UK <- auto.arima(cpi_ts_UK,seasonal = TRUE)
+summary(model_UK)
+
+
+resid_UK <- residuals(model_UK)
+
+#change lag value
+lag_val <- 8
+lb_result <- Box.test(resid_UK, lag = lag_val, type = "Ljung-Box", fitdf = length(model_UK$coef))
+print(lb_result)
+
+
+forecast_cpi_UK <- forecast(model_UK, h = 12)
+plot(forecast_cpi_UK, main = "Forecasted UK CPI (Food Index)")
+
+
+forecast_cpi_UK
+
+
+predicted_UK <- data.frame(
+  Date = seq(from = max(cpi_data_UK$time) + months(1), by = "month", length.out = 12),
+  Forecast = as.numeric(forecast_cpi_UK$mean)
+)
+
+############### US ###############
+cpi_data_US <- read_excel("dataset_for_prediction.xlsx", sheet = "data_area_United_states_of_amer") %>%
+  select(Value, time)
+
+
+cpi_data_US <- cpi_data_US %>%
+  mutate(time = ymd(as.character(time)))
+
+
+cpi_ts_US <- ts(cpi_data_US$Value, 
+                start = c(year(min(cpi_data_US$time)), 
+                          month(min(cpi_data_US$time))), 
+                frequency = 12)
+
+
+plot(cpi_ts_US, 
+     main = "US Monthly CPI (Food Index)", 
+     ylab = "CPI", 
+     xlab = "Year")
+
+
+model_US <- auto.arima(cpi_ts_US,seasonal= TRUE)
+summary(model_US)
+
+
+resid_US <- residuals(model_US)
+
+# Chaneg lag value 
+lag_val <- 8
+lb_result <- Box.test(resid_US, lag = lag_val, type = "Ljung-Box", fitdf = length(model_US$coef))
+print(lb_result)
+
+
+forecast_cpi_US <- forecast(model_US, h = 12)
+plot(forecast_cpi_US, 
+     main = "Forecasted US CPI (Food Index)")
+
+
+forecast_cpi_US
+
+
+predicted_US <- data.frame(
+  Date = seq(from = max(cpi_data_US$time) + months(1), 
+             by = "month", 
+             length.out = 12),
+  Forecast = as.numeric(forecast_cpi_US$mean)
+)
+
